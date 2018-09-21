@@ -2,7 +2,6 @@ const history = require('repl.history');
 const os = require('os');
 const path = require('path');
 const historyFile = path.join(os.homedir(), '.async_repl_history');
-const rewrite = require('./rewrite');
 const babel = require("babel-core")
 
 module.exports = function (repl) {
