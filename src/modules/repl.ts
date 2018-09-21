@@ -5,7 +5,6 @@ import PlasmaDB from './db'
 
 const transform = require('./repl-utils/transform')
 
-
 export function startCLI(args: any) {
   // Setup args
   const provider = new Web3.providers.HttpProvider(args.ethereum)
@@ -24,6 +23,5 @@ export function startCLI(args: any) {
   prompt.context.ERC20 = ERC20
   prompt.context.ERC721 = ERC721
   prompt.context.local = database
-  transform(prompt);
-
+  transform(prompt)
 }

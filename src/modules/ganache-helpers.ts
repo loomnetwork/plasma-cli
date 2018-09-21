@@ -31,7 +31,7 @@ function sendAsync<T>(web3: Web3, method: string, id: number, params?: any): Pro
 
 export async function increaseTime(web3: Web3, duration: number): Promise<void> {
   const id = Date.now()
-  const adj = await sendAsync<number>(web3, 'evm_increaseTime', id, [duration])
+  await sendAsync<number>(web3, 'evm_increaseTime', id, [duration])
   return sendAsync<void>(web3, 'evm_mine', id + 1)
 }
 
@@ -47,7 +47,7 @@ export async function increaseTimeTo(web3: Web3, target: number) {
   if (target < now) {
     throw Error(`Cannot increase current time (${now}) to a moment in the past (${target})`)
   }
-  let diff = target - now
+  const diff = target - now
   increaseTime(web3, diff)
 }
 

@@ -18,7 +18,8 @@
     "build:browser": "tsc && webpack",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "yarn copy-contracts && tsc && yarn tape",
-    "copy-contracts": "node ./scripts/copy-contracts.js"
+    "copy-contracts": "node ./scripts/copy-contracts.js",
+    "postinstall": "yarn build"
   },
   "dependencies": {
     "@types/lowdb": "^1.0.5",
