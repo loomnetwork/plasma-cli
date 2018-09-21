@@ -21,6 +21,7 @@
     "copy-contracts": "node ./scripts/copy-contracts.js"
   },
   "dependencies": {
+    "@types/lowdb": "^1.0.5",
     "babel-core": "^6.26.3",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2015": "^6.24.1",
@@ -28,6 +29,7 @@
     "bn.js": "^4.11.8",
     "ethereumjs-util": "^5.2.0",
     "loom-js": "^1.17.0",
+    "lowdb": "^1.0.0",
     "rlp": "^2.1.0",
     "web3": "^1.0.0-beta.34"
   },

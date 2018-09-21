@@ -1,0 +1,13 @@
+{
+  "ethereum": "http://localhost:8545",
+  "dappchain": "http://localhost:46658",
+  "plasma": "0x8B40761142B9aa6dc8964e61D0585995425C3D94",
+  "privatekey": "0x1233212134214542314214215123",
+  "coins": [
+    {
+      "id": 1,
+      "block": 2,
+      "merkleProof": "0x123"
+    }
+  ]
+}
