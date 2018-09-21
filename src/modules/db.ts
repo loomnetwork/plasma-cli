@@ -24,7 +24,7 @@ class PlasmaDB {
         coins: []
       })
       .write()
-    console.log("Initialized database", this.db.value())
+    console.log('Initialized database', this.db.value())
   }
 
   receiveCoin(coinId: Number, block: Number, proof: String) {
@@ -32,41 +32,44 @@ class PlasmaDB {
     // Throw for duplicate block
     // Append for new coinId
 
-    if(this.exists(coinId, block, proof)) {
-        return
+    if (this.exists(coinId, block, proof)) {
+      return
     }
 
     const result = this.db
       .get('coins')
       .push({
         id: coinId,
-        block: block, 
+        block: block,
         merkleProof: proof
       })
       .write()
     // console.log('State updated', result)
   }
 
-  exists(coinId: Number, block: Number, proof: String) : Boolean {
+  exists(coinId: Number, block: Number, proof: String): Boolean {
     const result = this.db
       .get('coins')
-      .filter({ id: coinId, block: block})
+      .filter({ id: coinId, block: block })
       .value()
     if (result.length > 0) {
-        console.log(`Proof for Coin: ${coinId} at Block: ${block} already exists`)
-        return true
+      console.log(`Proof for Coin: ${coinId} at Block: ${block} already exists`)
+      return true
     } else {
-        return false
+      return false
     }
   }
 
   removeCoin(coinId: Number) {
-      this.db.get('coins').remove({id: coinId}).write()
-      console.log(`Coin ${coinId} removed`)
+    this.db
+      .get('coins')
+      .remove({ id: coinId })
+      .write()
+    console.log(`Coin ${coinId} removed`)
   }
 
   getCoin(coinId: any): any {
-      // todo organize the filter to not return the id in every row
+    // todo organize the filter to not return the id in every row
     return this.db
       .get('coins')
       .filter({ id: coinId })
@@ -74,8 +77,8 @@ class PlasmaDB {
   }
 
   getAllCoins(): any {
-      // todo group by coinId
-      return this.db.get('coins').value()
+    // todo group by coinId
+    return this.db.get('coins').value()
   }
 }
 
@@ -92,6 +95,6 @@ export default PlasmaDB
 // console.log(db.getCoin(id))
 // db.removeCoin(id)
 // console.log(db.getCoin(id))
-// 
+//
 // console.log(db.getAllCoins())
-// 
+//
