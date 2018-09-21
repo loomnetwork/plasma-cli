@@ -3,6 +3,9 @@ import { ERC20, ERC721, createEntity } from './config'
 import repl from 'repl'
 import PlasmaDB from './db'
 
+const transform = require('./repl-utils/transform')
+
+
 export function startCLI(args: any) {
   // Setup args
   const provider = new Web3.providers.HttpProvider(args.ethereum)
@@ -16,8 +19,11 @@ export function startCLI(args: any) {
   const prompt = repl.start('$ ')
   prompt.context.plasma = plasma
   prompt.context.web3 = web3
+  prompt.context.eth = web3.eth
   prompt.context.dappchain = user
   prompt.context.ERC20 = ERC20
   prompt.context.ERC721 = ERC721
   prompt.context.local = database
+  transform(prompt);
+
 }
