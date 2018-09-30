@@ -11,18 +11,19 @@ import {
   Client,
   createJSONRPCClient
 } from 'loom-js'
+import SignedContract from './signed-contract'
 
 export const DEFAULT_GAS = '3141592'
 export const CHILD_BLOCK_INTERVAL = 1000
 
-export function ERC721(web3: Web3, tokenAddress: string): any {
+export function ERC721(web3: Web3, tokenAddress: string, key: string): any {
   const abi = require('./../ABI/ERC721.json')
-  return new web3.eth.Contract(abi, tokenAddress)
+  return new SignedContract(web3, abi, tokenAddress, key)
 }
 
-export function ERC20(web3: Web3, tokenAddress: string): any {
+export function ERC20(web3: Web3, tokenAddress: string, key: string): any {
   const abi = require('./../ABI/ERC20.json')
-  return new web3.eth.Contract(abi, tokenAddress)
+  return new SignedContract(web3, abi, tokenAddress, key)
 }
 
 export function createEntity(

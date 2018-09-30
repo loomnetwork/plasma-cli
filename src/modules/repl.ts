@@ -2,6 +2,7 @@ import Web3 from 'web3'
 import { ERC20, ERC721, createEntity } from './config'
 import repl from 'repl'
 import PlasmaDB from './db'
+import SignedContract from './signed-contract';
 
 const transform = require('./repl-utils/transform')
 
@@ -11,7 +12,7 @@ export function startCLI(web3Endpoint: string, dappchainEndpoint: string, rootCh
   const web3 = new Web3(provider)
   const user = createEntity(web3, web3.utils.toChecksumAddress(rootChain), dappchainEndpoint, privateKey)
   const plasmaABI = require('./../ABI/PlasmaCash.json')
-  const plasma = new web3.eth.Contract(plasmaABI, rootChain)
+  const plasma = new SignedContract(web3, plasmaABI, rootChain, privateKey)
   const database = new PlasmaDB(web3Endpoint, dappchainEndpoint, rootChain, privateKey)
 
   // Create the REPL
