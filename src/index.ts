@@ -2,6 +2,7 @@
 
 import { startCLI } from './modules/repl'
 import args, { CommanderStatic } from 'commander'
+import path from 'path'
 
 // CLI Parser
 args
@@ -15,11 +16,21 @@ args
   .option('-a, --address [plasma-address]', "The Plasma Contract's address")
   .option('--key [private-key]', 'Your private key')
   .option('--keystore json-keystore [file]', 'Your private key')
+  .option('-c --config [config-file]', 'Your config file')
   .parse(process.argv)
 
-if (!args.key || !args.address) {
-  console.error('Options --key and --address are mandatory')
-  process.exit(-1)
+let privateKey, rootChainAddress
+try {
+  const config = require(path.resolve(args.config))
+  privateKey = config.privateKey
+  rootChainAddress = config.rootChain
+} catch(e)  {
+  if (!args.key || !args.address) {
+    console.error('Options --key and --address are mandatory')
+    process.exit(-1)
+  }
+  privateKey = args.key
+  rootChainAddress = args.address
 }
 
-startCLI(args)
+startCLI(args.ethereum, args.dappchain, rootChainAddress, privateKey)

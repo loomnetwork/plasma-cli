@@ -5,14 +5,14 @@ import PlasmaDB from './db'
 
 const transform = require('./repl-utils/transform')
 
-export function startCLI(args: any) {
+export function startCLI(web3Endpoint: string, dappchainEndpoint: string, rootChain: string,  privateKey: string) {
   // Setup args
-  const provider = new Web3.providers.HttpProvider(args.ethereum)
+  const provider = new Web3.providers.WebsocketProvider(web3Endpoint)
   const web3 = new Web3(provider)
-  const user = createEntity(web3, args.address, args.dappchain, args.key)
+  const user = createEntity(web3, web3.utils.toChecksumAddress(rootChain), dappchainEndpoint, privateKey)
   const plasmaABI = require('./../ABI/PlasmaCash.json')
-  const plasma = new web3.eth.Contract(plasmaABI, args.address)
-  const database = new PlasmaDB(args.ethereum, args.dappchain, args.address, args.key)
+  const plasma = new web3.eth.Contract(plasmaABI, rootChain)
+  const database = new PlasmaDB(web3Endpoint, dappchainEndpoint, rootChain, privateKey)
 
   // Create the REPL
   const prompt = repl.start('$ ')
@@ -23,5 +23,14 @@ export function startCLI(args: any) {
   prompt.context.ERC20 = ERC20
   prompt.context.ERC721 = ERC721
   prompt.context.local = database
+
+  // Set some convenience variables
+  prompt.context.helpers = {
+    plasmaAddress : rootChain,
+    web3Endpoint : web3Endpoint,
+    dappchainEndpoint : dappchainEndpoint,
+    self : web3.eth.accounts.privateKeyToAccount(privateKey).address
+  }
+
   transform(prompt)
 }
