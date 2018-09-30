@@ -45,7 +45,8 @@ export function createEntity(
     new SignedTxMiddleware(privKey)
   ]
   const callerAddress = new Address('default', LocalAddress.fromPublicKey(pubKey))
-  const dAppPlasmaClient = new DAppChainPlasmaClient({ dAppClient, callerAddress })
+  const contractName = undefined
+  const dAppPlasmaClient = new DAppChainPlasmaClient({ dAppClient, callerAddress, contractName })
   return new Entity(web3, {
     ethAccount,
     ethPlasmaClient,

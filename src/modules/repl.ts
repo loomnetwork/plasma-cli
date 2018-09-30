@@ -15,14 +15,17 @@ export function startCLI(web3Endpoint: string, dappchainEndpoint: string, rootCh
   const plasma = new SignedContract(web3, plasmaABI, rootChain, privateKey)
   const database = new PlasmaDB(web3Endpoint, dappchainEndpoint, rootChain, privateKey)
 
+  const myERC721 = (addr: string) => ERC721(web3, addr, privateKey)
+  const myERC20 = (addr: string) => ERC20(web3, addr, privateKey)
+
   // Create the REPL
   const prompt = repl.start('$ ')
   prompt.context.plasma = plasma
   prompt.context.web3 = web3
   prompt.context.eth = web3.eth
   prompt.context.dappchain = user
-  prompt.context.ERC20 = ERC20
-  prompt.context.ERC721 = ERC721
+  prompt.context.ERC20 = myERC20
+  prompt.context.ERC721 = myERC721
   prompt.context.local = database
 
   // Set some convenience variables
