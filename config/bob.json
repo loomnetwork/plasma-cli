@@ -1,6 +1,4 @@
 {
-    "privateKey": "0x2f615ea53711e0d91390e97cdd5ce97357e345e441aa95d255094164f44c8652",
-    "validatorManager": "0xf5cad0db6415a71a5bc67403c87b56b629b4ddaa",
-    "rootChain": "0x9e51aeeeca736cd81d27e025465834b8ec08628a",
-    "tokenContract": "0x1aa76056924bf4768d63357eca6d6a56ec929131"
+    "privateKey": "0xef97f5e717f6a16ffc4441925b4b825a36faaa5097348f4f61b707d1c35dda98",
+    "address": "0x82472162c3e7927557e7bcf5cca7261e188747d3"
 }
