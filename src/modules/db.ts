@@ -9,7 +9,7 @@ class PlasmaDB {
     let adapter
     if (typeof localStorage === 'undefined' || localStorage === null) {
       const low = require('lowdb')
-      adapter = new FileSync('db.json')
+      adapter = new FileSync(`db/db_${privateKey}.json`)
     } else {
       adapter = new LocalStorage('db')
     }
