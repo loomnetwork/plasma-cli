@@ -9,21 +9,23 @@ import {
   LocalAddress,
   DAppChainPlasmaClient,
   Client,
-  createJSONRPCClient
+  createJSONRPCClient,
+  SignedContract
 } from 'loom-js'
-import SignedContract from './signed-contract'
+
+import { Account } from 'web3/eth/accounts'
 
 export const DEFAULT_GAS = '3141592'
 export const CHILD_BLOCK_INTERVAL = 1000
 
-export function ERC721(web3: Web3, tokenAddress: string, key: string): any {
+export function ERC721(web3: Web3, tokenAddress: string, account: Account): any {
   const abi = require('./../ABI/ERC721.json')
-  return new SignedContract(web3, abi, tokenAddress, key)
+  return new SignedContract(web3, abi, tokenAddress, account)
 }
 
-export function ERC20(web3: Web3, tokenAddress: string, key: string): any {
+export function ERC20(web3: Web3, tokenAddress: string, account: Account): any {
   const abi = require('./../ABI/ERC20.json')
-  return new SignedContract(web3, abi, tokenAddress, key)
+  return new SignedContract(web3, abi, tokenAddress, account)
 }
 
 export function createEntity(
@@ -33,7 +35,7 @@ export function createEntity(
   ethPrivateKey: string
 ): Entity {
   const ethAccount = web3.eth.accounts.privateKeyToAccount(ethPrivateKey)
-  const ethPlasmaClient = new EthereumPlasmaClient(web3, plasmaAddress)
+  const ethPlasmaClient = new EthereumPlasmaClient(web3, ethAccount, plasmaAddress)
   const writer = createJSONRPCClient({ protocols: [{ url: dappchainAddress + '/rpc' }] })
   const reader = createJSONRPCClient({ protocols: [{ url: dappchainAddress + '/query' }] })
   const dAppClient = new Client('default', writer, reader)
