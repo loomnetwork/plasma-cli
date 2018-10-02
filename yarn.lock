@@ -4192,16 +4192,18 @@ long@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/long/-/long-3.2.0.tgz#d821b7138ca1cb581c172990ef14db200b5c474b"
 
-loom-js@^1.25.0:
+"loom-js@git+https://github.com/loomnetwork/loom-js.git#ux-fixes":
   version "1.25.0"
-  resolved "https://registry.yarnpkg.com/loom-js/-/loom-js-1.25.0.tgz#63c66daec1e795e09e9401c7b259bc6c2b4d7496"
+  resolved "git+https://github.com/loomnetwork/loom-js.git#71e1bded25962ace9dbc0780f6e05ac70185e827"
   dependencies:
+    "@types/lowdb" "^1.0.5"
     axios "^0.18.0"
     bn.js "^4.11.8"
     crypto-browserify "^3.12.0"
     debug "^3.1.0"
     ethereumjs-util "^5.2.0"
     google-protobuf "3.6"
+    lowdb "^1.0.0"
     retry "^0.12.0"
     ripemd160 "^2.0.1"
     rlp "^2.1.0"

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { startCLI } from './modules/repl'
-import args, { CommanderStatic } from 'commander'
+import args from 'commander'
 import path from 'path'
 import BN from 'bn.js'
 

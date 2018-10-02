@@ -1,11 +1,9 @@
 import Web3 from 'web3'
 import { ERC20, ERC721, createEntity } from './config'
 import repl from 'repl'
-import PlasmaDB from './db'
 import BN from 'bn.js'
 import { increaseTime } from './ganache-helpers'
-import { Account } from 'web3/types'
-import { SignedContract } from 'loom-js'
+import { PlasmaDB } from 'loom-js'
 
 const transform = require('./repl-utils/transform')
 
@@ -20,13 +18,14 @@ export function startCLI(
   // Setup args
   const provider = new Web3.providers.WebsocketProvider(web3Endpoint)
   const web3 = new Web3(provider)
+  const database = new PlasmaDB(web3Endpoint, dappchainEndpoint, rootChain, privateKey)
   const user = createEntity(
     web3,
     web3.utils.toChecksumAddress(rootChain),
     dappchainEndpoint,
-    privateKey
+    privateKey,
+    database
   )
-  const database = new PlasmaDB(web3Endpoint, dappchainEndpoint, rootChain, privateKey)
   const myERC721 = (addr: string) => ERC721(web3, addr, user.ethAccount)
   const myERC20 = (addr: string) => ERC20(web3, addr, user.ethAccount)
 

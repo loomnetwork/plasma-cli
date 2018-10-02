@@ -7,10 +7,11 @@ import {
   SignedTxMiddleware,
   Address,
   LocalAddress,
-  DAppChainPlasmaClient,
+  CachedDAppChainPlasmaClient,
   Client,
   createJSONRPCClient,
-  SignedContract
+  SignedContract,
+  PlasmaDB
 } from 'loom-js'
 
 import { Account } from 'web3/eth/accounts'
@@ -32,7 +33,8 @@ export function createEntity(
   web3: Web3,
   plasmaAddress: string,
   dappchainAddress: string,
-  ethPrivateKey: string
+  ethPrivateKey: string,
+  database: PlasmaDB
 ): Entity {
   const ethAccount = web3.eth.accounts.privateKeyToAccount(ethPrivateKey)
   const ethPlasmaClient = new EthereumPlasmaClient(web3, ethAccount, plasmaAddress)
@@ -48,7 +50,12 @@ export function createEntity(
   ]
   const callerAddress = new Address('default', LocalAddress.fromPublicKey(pubKey))
   const contractName = undefined
-  const dAppPlasmaClient = new DAppChainPlasmaClient({ dAppClient, callerAddress, contractName })
+  const dAppPlasmaClient = new CachedDAppChainPlasmaClient({
+    dAppClient,
+    callerAddress,
+    database,
+    contractName
+  })
   return new Entity(web3, {
     ethAccount,
     ethPlasmaClient,
