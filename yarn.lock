@@ -4161,7 +4161,7 @@ lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
 
-lodash@4:
+lodash@4, lodash@^4.17.11:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
 
@@ -4192,17 +4192,17 @@ long@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/long/-/long-3.2.0.tgz#d821b7138ca1cb581c172990ef14db200b5c474b"
 
-"loom-js@git+https://github.com/loomnetwork/loom-js.git#ux-fixes":
+"loom-js@git+https://github.com/loomnetwork/loom-js.git#build-files":
   version "1.25.0"
-  resolved "git+https://github.com/loomnetwork/loom-js.git#71e1bded25962ace9dbc0780f6e05ac70185e827"
+  resolved "git+https://github.com/loomnetwork/loom-js.git#280da49d3134e72c93e500c840eb1cdc16edf80f"
   dependencies:
-    "@types/lowdb" "^1.0.5"
     axios "^0.18.0"
     bn.js "^4.11.8"
     crypto-browserify "^3.12.0"
     debug "^3.1.0"
     ethereumjs-util "^5.2.0"
     google-protobuf "3.6"
+    lodash "^4.17.11"
     lowdb "^1.0.0"
     retry "^0.12.0"
     ripemd160 "^2.0.1"
