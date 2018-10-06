@@ -30,7 +30,7 @@
     "babel-preset-stage-3": "^6.24.1",
     "bn.js": "^4.11.8",
     "ethereumjs-util": "^5.2.0",
-    "loom-js": "git+https://github.com/loomnetwork/loom-js.git#build-files",
+    "loom-js": "^1.26.0",
     "lowdb": "^1.0.0",
     "repl.history": "^0.1.4",
     "rlp": "^2.1.0",
