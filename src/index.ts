@@ -11,7 +11,6 @@ import Vorpal = require('vorpal');
 import {Args, CommandInstance} from "vorpal";
 import { User } from './modules/user'
 import BN from 'bn.js';
-import { networkInterfaces } from 'os';
 
 const vorpal = new Vorpal();
 const vorpalLog = require('vorpal-log')
@@ -77,12 +76,23 @@ const user = new User(entity, database, web3, addressbook, token, startBlock)
 
 // Next iteration make depositERC20/depositERC721/depositETH for each 
 vorpal
-  .command('deposit <coinId>', 'Deposit a coin to the Plasma Chain ')
+  .command('deposit <coinId>', 'Deposit a coin to the Plasma Chain (coinId must be in decimal)')
   .types({string: ['_']})
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
     await user.deposit(args.coinId)
     // wait for the deposit event for receipt
+    const deposits = await user.deposits()
+    this.log("Coin deposited!")
+    console.log(deposits[deposits.length-1])
+  })
+
+// Next iteration make depositERC20/depositERC721/depositETH for each 
+vorpal
+  .command('deposits' , 'Gets all the deposits the user has made')
+  .action(async function(this: CommandInstance, args: Args) {
+    const deposits = await user.deposits()
+    console.log(deposits)
   })
 
 vorpal
@@ -143,9 +153,8 @@ vorpal
   .types({string: ['_']})
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Retrieving info for coin ${args.coinId}`)
-    this.log(await user.coin(args.coinId))
+    console.log(await user.coin(args.coinId))
   })
-
 
 vorpal
   .delimiter('✨ ')

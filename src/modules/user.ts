@@ -69,15 +69,15 @@ export class User {
   }
 
   async finalizeExit(slot: string) {
-    await this._user.plasmaCashContract.finalizeExit(new BN(slot, 16))
+    return await this._user.plasmaCashContract.finalizeExit(new BN(slot, 16))
   }
 
   async withdraw(slot: string) {
-    await this._user.withdrawAsync(new BN(slot, 16))
+    return await this._user.withdrawAsync(new BN(slot, 16))
   }
 
   async withdrawBonds() {
-    await this._user.withdrawBondsAsync()
+    return await this._user.withdrawBondsAsync()
   }
 
   async coin(slot: string) {
@@ -86,22 +86,22 @@ export class User {
   }
 
   // Get all deposits, filtered by the user's address.
-  async deposits() {
-    await this._user.getDepositEvents(this._startBlock || new BN(0), false)
+  async deposits(): Promise<any[]> {
+    return await this._user.getDepositEvents(this._startBlock || new BN(0), false)
   }
 
   async refresh() {
-    await this._user.refreshAsync()
+    return await this._user.refreshAsync()
   }
 
   // Skip ahead time for finalizing exits in local tests
   async timeskip() {
-    await increaseTime(this._web3, 8 * 24 * 3600)
+    return await increaseTime(this._web3, 8 * 24 * 3600)
   }
 
   // Initialize a demo erc721 token
   async deposit(uid: string) {
-    await this._token.safeTransferFrom([
+    return await this._token.safeTransferFrom([
       this._addressbook.self,
       this._addressbook.plasmaAddress,
       uid
