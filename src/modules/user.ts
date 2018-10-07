@@ -103,7 +103,7 @@ export class User {
     await this._token.safeTransferFrom([
       this._addressbook.self,
       this._addressbook.plasmaAddress,
-      new BN(uid)
+      uid
     ])
   }
 }

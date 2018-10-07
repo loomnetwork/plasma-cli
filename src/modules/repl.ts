@@ -40,10 +40,11 @@ export function startCLI(
     self: web3.eth.accounts.privateKeyToAccount(privateKey).address,
     selfPrivate: privateKey
   }
-
+  const user = new User(entity, database, web3, addressbook, token, startBlock)
+  
   // Low level prompt objects
   prompt.context.BN = BN
-  prompt.context.plasma = entity.plasmaCashContract
+  prompt.context.contract = entity.plasmaCashContract
   prompt.context.web3 = web3
   prompt.context.eth = web3.eth
   prompt.context.dappchain = entity
@@ -52,20 +53,20 @@ export function startCLI(
   prompt.context.token = token
   prompt.context.local = database
   prompt.context.addressbook = addressbook
-
-  // These are the functions that should be made available to the user in the UI
-
-  const user = new User(entity, database, web3, startBlock, addressbook, token)
-  prompt.context.timeskip = user.timeskip
-  prompt.context.refresh = user.refresh
-  prompt.context.deposit = user.deposit
-  prompt.context.transfer = user.transfer
-  prompt.context.exit = user.exit
-  prompt.context.finalize = user.finalizeExit
-  prompt.context.withdraw = user.withdraw
-  prompt.context.withdrawBonds = user.withdrawBonds
-  prompt.context.deposits = user.deposits
-  prompt.context.getCoin = user.coin
+  
+  // The user interacts with the functions of the `user` object only.
+  prompt.context.plasma = user
+  
+  // prompt.context.timeskip = user.timeskip
+  // prompt.context.refresh = user.refresh
+  // prompt.context.deposit = user.deposit
+  // prompt.context.transfer = user.transfer
+  // prompt.context.exit = user.exit
+  // prompt.context.finalize = user.finalizeExit
+  // prompt.context.withdraw = user.withdraw
+  // prompt.context.withdrawBonds = user.withdrawBonds
+  // prompt.context.deposits = user.deposits
+  // prompt.context.getCoin = user.coin
 
   // Apply the async/await functionality on the repl
   transform(prompt)
