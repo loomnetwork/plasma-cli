@@ -5,6 +5,5 @@ const os = require('os')
 const path = require('path')
 
 shell.mkdir('-p', './dist/ABI')
-shell.mkdir('-p', './dist/modules/repl-utils')
+shell.mkdir('-p', './dist/modules/commands')
 shell.cp('./src/ABI/*.json', './dist/ABI/')
-shell.cp('./src/modules/repl-utils/*.js', './dist/modules/repl-utils')

@@ -81,7 +81,8 @@ export class User {
   }
 
   async coin(slot: string) {
-    await this._user.getPlasmaCoinAsync(new BN(slot, 16))
+    // @ts-ignore
+    return await this._user.getPlasmaCoinAsync(slot)
   }
 
   // Get all deposits, filtered by the user's address.
