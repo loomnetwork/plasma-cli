@@ -1,22 +1,21 @@
 #!/usr/bin/env node
 
-
 import args from 'commander'
 import { PlasmaDB } from 'loom-js'
 import Web3 from 'web3'
 import { createEntity, ERC721, ERC20 } from './modules/config'
 import path from 'path'
 
-import Vorpal = require('vorpal');
-import {Args, CommandInstance} from "vorpal";
+import Vorpal = require('vorpal')
+import { Args, CommandInstance } from 'vorpal'
 import { User } from './modules/user'
-import BN from 'bn.js';
+import BN from 'bn.js'
 
-const vorpal = new Vorpal();
+const vorpal = new Vorpal()
 const vorpalLog = require('vorpal-log')
 const repl = require('vorpal-repl')
-vorpal.use(vorpalLog);
-vorpal.history('plasma-cash.log');
+vorpal.use(vorpalLog)
+vorpal.history('plasma-cash.log')
 
 // CLI Parser
 args
@@ -74,22 +73,22 @@ const addressbook = {
 }
 const user = new User(entity, database, web3, addressbook, token, startBlock)
 
-// Next iteration make depositERC20/depositERC721/depositETH for each 
+// Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
   .command('deposit <coinId>', 'Deposit a coin to the Plasma Chain (coinId must be in decimal)')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
     await user.deposit(args.coinId)
     // wait for the deposit event for receipt
     const deposits = await user.deposits()
-    this.log("Coin deposited!")
-    console.log(deposits[deposits.length-1])
+    this.log('Coin deposited!')
+    console.log(deposits[deposits.length - 1])
   })
 
-// Next iteration make depositERC20/depositERC721/depositETH for each 
+// Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
-  .command('deposits' , 'Gets all the deposits the user has made')
+  .command('deposits', 'Gets all the deposits the user has made')
   .action(async function(this: CommandInstance, args: Args) {
     const deposits = await user.deposits()
     console.log(deposits)
@@ -97,16 +96,16 @@ vorpal
 
 vorpal
   .command('exitCoin <coinId>', 'Start the exit of a coin from the Plasma Chain')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Exiting ${args.coindId}!. Please wait for the exit period...`)
-    await user.exit(args.coinID)
+    this.log(`Exiting ${args.coinId}!. Please wait for the exit period...`)
+    await user.exit(args.coinId)
     // Wait for the started exit event for receipt
   })
 
 vorpal
   .command('transfer <coinId> <newOwner>', 'Send a coin to a new user')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Transferring ${args.coinId} to ${args.newOwner}`)
     await user.transfer(args.coinId, args.newOwner)
@@ -115,7 +114,7 @@ vorpal
 
 vorpal
   .command('finalize <coinId>', 'Finalize the exit of a coin and withdraw it')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Finalizing the exit for ${args.slot}`)
     await user.finalizeExit(args.slot)
@@ -123,17 +122,16 @@ vorpal
   })
 
 vorpal
-  .command('refresh', 'Refreshes the user\'s state')
+  .command('refresh', "Refreshes the user's state")
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Refreshing state`)
     await user.refresh()
     this.log(`Updated!`)
   })
 
-
 vorpal
   .command('withdraw <coinId>', 'Gets the details about a coin')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Withdrawing ${args.coinId}`)
     await user.withdraw(args.coinId)
@@ -141,8 +139,8 @@ vorpal
   })
 
 vorpal
-  .command('withdrawBonds', 'Withdraws the user\'s bonds')
-  .types({string: ['_']})
+  .command('withdrawBonds', "Withdraws the user's bonds")
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Withdrawing user bonds`)
     await user.withdrawBonds()
@@ -150,7 +148,7 @@ vorpal
 
 vorpal
   .command('coin <coinId>', 'Gets the details about a coin')
-  .types({string: ['_']})
+  .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Retrieving info for coin ${args.coinId}`)
     console.log(await user.coin(args.coinId))
@@ -159,4 +157,4 @@ vorpal
 vorpal
   .delimiter('✨ ')
   .use(repl)
-  .show();
+  .show()
