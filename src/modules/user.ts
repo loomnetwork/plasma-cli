@@ -32,7 +32,7 @@ export class User {
   // Exiting a coin by specifying the slot. Finding the block numbers is done under the hood.
   async exit(slot: BN) {
     // TODO: If database empty -> get coin history
-    const { prevBlockNum, blockNum } = this.findBlocks(slot)
+    const { prevBlockNum, blockNum } = await this.findBlocks(slot)
     return await this._user.startExitAsync({
       slot: slot,
       prevBlockNum: prevBlockNum,
@@ -41,7 +41,7 @@ export class User {
   }
   // Transfer a coin by specifying slot & new owner
   async transfer(slot: BN, newOwner: string) {
-    const { prevBlockNum, blockNum } = this.findBlocks(slot)
+    const { prevBlockNum, blockNum } = await this.findBlocks(slot)
     return await this._user.transferTokenAsync({
       slot,
       prevBlockNum,
@@ -50,8 +50,9 @@ export class User {
     })
   }
 
-  findBlocks(slot: BN): any {
+  async findBlocks(slot: BN): Promise<any> {
     const coinData: IDatabaseCoin[] = this._database.getCoin(slot)
+    if (coinData.length == 0) await this.refresh()
     // Search for the latest transaction in the coin's history, O(N)
     let blockNum = coinData[0].blockNumber
     let prevBlockNum = coinData[0].tx.prevBlockNum
@@ -66,11 +67,11 @@ export class User {
   }
 
   async finalizeExit(slot: BN) {
-    return await this._user.plasmaCashContract.finalizeExit(new BN(slot, 16))
+    return await this._user.plasmaCashContract.finalizeExit([slot])
   }
 
   async withdraw(slot: BN) {
-    return await this._user.withdrawAsync(new BN(slot, 16))
+    return await this._user.withdrawAsync(slot)
   }
 
   async withdrawBonds() {
@@ -85,6 +86,17 @@ export class User {
   async deposits(): Promise<any[]> {
     return await this._user.getDepositEvents(this._startBlock || new BN(0), false)
   }
+
+  async debug(i: number) {
+    const deps = await this._user.getDepositEvents(this._startBlock || new BN(0), true)
+    await this._user.submitPlasmaDepositAsync(deps[i])
+  }
+
+  async submit() {
+    await this._user.submitPlasmaBlockAsync()
+  }
+
+
 
   async refresh() {
     return await this._user.refreshAsync()

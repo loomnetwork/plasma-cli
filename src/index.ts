@@ -79,12 +79,32 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
+    try {
     await user.deposit(args.coinId)
     // wait for the deposit event for receipt
     const deposits = await user.deposits()
     this.log('Coin deposited!')
     console.log(deposits[deposits.length - 1])
+    } catch (e) {
+      console.log(`Failed to deposit. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`)
+    }
   })
+
+vorpal
+  .command('debug submitDeposit i', 'Submit deposits to the dappchain in place of the oracle')
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    await user.debug(args.i)
+  })
+
+vorpal
+  .command('debug submitBlock', 'Submits the pending dappchain block in place of the oracle')
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    await user.submit()
+  })
+
+
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
@@ -99,7 +119,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Exiting ${args.coinId}!. Please wait for the exit period...`)
-    await user.exit(args.coinId)
+    await user.exit(new BN(args.coinId, 16))
     // Wait for the started exit event for receipt
   })
 
@@ -108,7 +128,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Transferring ${args.coinId} to ${args.newOwner}`)
-    await user.transfer(args.coinId, args.newOwner)
+    await user.transfer(new BN(args.coinId, 16), args.newOwner)
     // Wait for the submit block and the data availability for receipt
   })
 
@@ -116,8 +136,8 @@ vorpal
   .command('finalize <coinId>', 'Finalize the exit of a coin and withdraw it')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Finalizing the exit for ${args.slot}`)
-    await user.finalizeExit(args.slot)
+    await user.finalizeExit(new BN(args.coinId, 16))
+    this.log(`Finalized the exit for ${args.coinId}`)
     // wait for the finalize exit for receipt
   })
 
@@ -134,16 +154,16 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Withdrawing ${args.coinId}`)
-    await user.withdraw(args.coinId)
-    // wait for receipt
+    await user.withdraw(new BN(args.coinId, 16))
+    console.log(`Withdraw. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`)
   })
 
 vorpal
   .command('withdrawBonds', "Withdraws the user's bonds")
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Withdrawing user bonds`)
     await user.withdrawBonds()
+    this.log(`Bonds withdrawn:)`)
   })
 
 vorpal
@@ -151,7 +171,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Retrieving info for coin ${args.coinId}`)
-    console.log(await user.coin(args.coinId))
+    console.log(await user.coin(new BN(args.coinId, 16)))
   })
 
 vorpal
