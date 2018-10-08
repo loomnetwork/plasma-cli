@@ -2,6 +2,7 @@ import BN from 'bn.js'
 import { PlasmaDB, Entity } from 'loom-js'
 import { increaseTime } from './ganache-helpers'
 import Web3 from 'web3'
+import { IDatabaseCoin } from 'loom-js/dist/plasma-cash/db'
 
 // User friendly wrapper for all Entity related functions, taking advantage of the database
 export class User {
@@ -28,79 +29,87 @@ export class User {
     this._token = token
   }
 
-  // TODO Check how prevBlockNum is saved and how exitBlockNum is saved. Keep every number in the same format in the local stoage
   // Exiting a coin by specifying the slot. Finding the block numbers is done under the hood.
-  async exit(slot: string) {
-    const coinData: any[] = this._database.getCoin(slot)
-    // Search for the latest transaction in the coin's history, O(N)
-    let max = coinData[0].block
-    let tx = coinData[0].tx
-    for (let i in coinData) {
-      const coin = coinData[i]
-      if (coin.blockNumber > max) {
-        max = coin.block
-        tx = coin.tx
-      }
-    }
+  async exit(slot: BN) {
+    // TODO: If database empty -> get coin history
+    const { prevBlockNum, blockNum } = await this.findBlocks(slot)
     return await this._user.startExitAsync({
-      slot: new BN(slot, 16),
-      prevBlockNum: new BN(tx.prevBlockNum, 16), // prev block is in 0x FIXIFIXFIX
-      exitBlockNum: new BN(max) // max is in decimal
+      slot: slot,
+      prevBlockNum: prevBlockNum,
+      exitBlockNum: blockNum
     })
   }
-
   // Transfer a coin by specifying slot & new owner
-  async transfer(slot: string, newOwner: string) {
-    const coinData: any[] = this._database.getCoin(slot)
-    // Search for the latest transaction in the coin's history, O(N)
-    let max = coinData[0].blockNumber
-    for (let i in coinData) {
-      const coin = coinData[i]
-      if (coin.blockNumber > max) {
-        max = coin.blockNumber
-      }
-    }
+  async transfer(slot: BN, newOwner: string) {
+    const { prevBlockNum, blockNum } = await this.findBlocks(slot)
     return await this._user.transferTokenAsync({
-      slot: new BN(slot, 16),
-      prevBlockNum: new BN(max, 16),
+      slot,
+      prevBlockNum,
       denomination: 1,
       newOwner: newOwner
     })
   }
 
-  async finalizeExit(slot: string) {
-    await this._user.plasmaCashContract.finalizeExit(new BN(slot, 16))
+  async findBlocks(slot: BN): Promise<any> {
+    const coinData: IDatabaseCoin[] = this._database.getCoin(slot)
+    if (coinData.length == 0) await this.refresh()
+    // Search for the latest transaction in the coin's history, O(N)
+    let blockNum = coinData[0].blockNumber
+    let prevBlockNum = coinData[0].tx.prevBlockNum
+    for (let i in coinData) {
+      const coin = coinData[i]
+      if (coin.blockNumber > blockNum) {
+        blockNum = coin.blockNumber
+        prevBlockNum = coin.tx.prevBlockNum
+      }
+    }
+    return { prevBlockNum, blockNum }
   }
 
-  async withdraw(slot: string) {
-    await this._user.withdrawAsync(new BN(slot, 16))
+  async finalizeExit(slot: BN) {
+    return await this._user.plasmaCashContract.finalizeExit([slot])
+  }
+
+  async withdraw(slot: BN) {
+    return await this._user.withdrawAsync(slot)
   }
 
   async withdrawBonds() {
-    await this._user.withdrawBondsAsync()
+    return await this._user.withdrawBondsAsync()
   }
 
-  async coin(slot: string) {
-    await this._user.getPlasmaCoinAsync(new BN(slot, 16))
+  async coin(slot: BN) {
+    return await this._user.getPlasmaCoinAsync(slot)
   }
 
   // Get all deposits, filtered by the user's address.
-  async deposits() {
-    await this._user.getDepositEvents(this._startBlock || new BN(0), false)
+  async deposits(): Promise<any[]> {
+    return await this._user.getDepositEvents(this._startBlock || new BN(0), false)
   }
 
+  async debug(i: number) {
+    const deps = await this._user.getDepositEvents(this._startBlock || new BN(0), true)
+    await this._user.submitPlasmaDepositAsync(deps[i])
+  }
+
+  async submit() {
+    await this._user.submitPlasmaBlockAsync()
+  }
+
+
+
   async refresh() {
-    await this._user.refreshAsync()
+    return await this._user.refreshAsync()
   }
 
   // Skip ahead time for finalizing exits in local tests
   async timeskip() {
-    await increaseTime(this._web3, 8 * 24 * 3600)
+    return await increaseTime(this._web3, 8 * 24 * 3600)
   }
 
   // Initialize a demo erc721 token
-  async deposit(uid: string) {
-    await this._token.safeTransferFrom([
+  async deposit(uid: BN) {
+    return await this._token.safeTransferFrom([
       this._addressbook.self,
       this._addressbook.plasmaAddress,
       uid
