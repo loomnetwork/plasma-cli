@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import args from 'commander'
-import { PlasmaDB } from 'loom-js'
 import Web3 from 'web3'
-import { createEntity, ERC721, ERC20 } from './modules/config'
+import { createUser } from 'loom-js'
+import { ERC721, ERC20 } from './modules/config'
 import path from 'path'
 
 import Vorpal = require('vorpal')
 import { Args, CommandInstance } from 'vorpal'
-import { User } from './modules/user'
 import BN from 'bn.js'
 
 const vorpal = new Vorpal()
@@ -51,17 +50,9 @@ try {
 
 const provider = new Web3.providers.WebsocketProvider(args.ethereum)
 const web3 = new Web3(provider)
-const database = new PlasmaDB(args.ethereum, args.dappchain, plasmaAddress, privateKey)
-const entity = createEntity(
-  web3,
-  web3.utils.toChecksumAddress(plasmaAddress),
-  args.dappchain,
-  privateKey,
-  database
-)
-
-const ERC721At = (addr: string) => ERC721(web3, addr, entity.ethAccount)
-const ERC20At = (addr: string) => ERC20(web3, addr, entity.ethAccount)
+const account = web3.eth.accounts.privateKeyToAccount(privateKey)
+const ERC721At = (addr: string) => ERC721(web3, addr, account)
+const ERC20At = (addr: string) => ERC20(web3, addr, account)
 const token = ERC721At(erc721Address).instance
 const addressbook = {
   plasmaAddress: plasmaAddress,
@@ -71,7 +62,15 @@ const addressbook = {
   self: web3.eth.accounts.privateKeyToAccount(privateKey).address,
   selfPrivate: privateKey
 }
-const user = new User(entity, database, web3, addressbook, token, startBlock)
+const user = createUser(
+  args.ethereum,
+  plasmaAddress,
+  args.dakpchain,
+  privateKey,
+  addressbook,
+  token,
+  startBlock
+)
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
@@ -80,13 +79,15 @@ vorpal
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
     try {
-    await user.deposit(args.coinId)
-    // wait for the deposit event for receipt
-    const deposits = await user.deposits()
-    this.log('Coin deposited!')
-    console.log(deposits[deposits.length - 1])
+      await user.deposit(args.coinId)
+      // wait for the deposit event for receipt
+      const deposits = await user.deposits()
+      this.log('Coin deposited!')
+      console.log(deposits[deposits.length - 1])
     } catch (e) {
-      console.log(`Failed to deposit. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`)
+      console.log(
+        `Failed to deposit. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`
+      )
     }
   })
 
@@ -101,10 +102,8 @@ vorpal
   .command('debug submitBlock', 'Submits the pending dappchain block in place of the oracle')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    await user.submit()
+    await user.submitPlasmaBlockAsync()
   })
-
-
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
@@ -145,7 +144,7 @@ vorpal
   .command('refresh', "Refreshes the user's state")
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Refreshing state`)
-    await user.refresh()
+    await user.refreshAsync()
     this.log(`Updated!`)
   })
 
@@ -162,7 +161,7 @@ vorpal
   .command('withdrawBonds', "Withdraws the user's bonds")
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    await user.withdrawBonds()
+    await user.withdrawBondsAsync()
     this.log(`Bonds withdrawn:)`)
   })
 
@@ -171,7 +170,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Retrieving info for coin ${args.coinId}`)
-    console.log(await user.coin(new BN(args.coinId, 16)))
+    console.log(await user.getPlasmaCoinAsync(new BN(args.coinId, 16)))
   })
 
 vorpal
