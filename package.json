@@ -38,7 +38,7 @@
     "vorpal": "^1.12.0",
     "vorpal-log": "^1.1.0",
     "vorpal-repl": "^1.1.8",
-    "web3": "^1.0.0-beta.36"
+    "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.46",

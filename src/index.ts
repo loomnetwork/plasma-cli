@@ -2,7 +2,7 @@
 
 import args from 'commander'
 import Web3 from 'web3'
-import { createUser } from 'loom-js'
+import { PlasmaUser } from 'loom-js'
 import { ERC721, ERC20 } from './modules/config'
 import path from 'path'
 
@@ -51,9 +51,6 @@ try {
 const provider = new Web3.providers.WebsocketProvider(args.ethereum)
 const web3 = new Web3(provider)
 const account = web3.eth.accounts.privateKeyToAccount(privateKey)
-const ERC721At = (addr: string) => ERC721(web3, addr, account)
-const ERC20At = (addr: string) => ERC20(web3, addr, account)
-const token = ERC721At(erc721Address).instance
 const addressbook = {
   plasmaAddress: plasmaAddress,
   demoToken: erc721Address,
@@ -62,24 +59,27 @@ const addressbook = {
   self: web3.eth.accounts.privateKeyToAccount(privateKey).address,
   selfPrivate: privateKey
 }
-const user = createUser(
+const user = PlasmaUser.createUser(
   args.ethereum,
   plasmaAddress,
-  args.dakpchain,
+  args.dappchain,
   privateKey,
-  addressbook,
-  token,
   startBlock
 )
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
+const ERC721At = (addr: string) => ERC721(web3, addr, account)
 vorpal
-  .command('deposit <coinId>', 'Deposit a coin to the Plasma Chain (coinId must be in decimal)')
+  .command(
+    'depositERC721 <address> <coinId>',
+    'Deposits an ERC721 coin to the Plasma Chain'
+  )
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
+    const token = ERC721At(args.address).instance
     try {
-      await user.deposit(args.coinId)
+      await token.safeTransferFrom([addressbook.self, addressbook.plasmaAddress, args.coinId])
       // wait for the deposit event for receipt
       const deposits = await user.deposits()
       this.log('Coin deposited!')
@@ -87,6 +87,50 @@ vorpal
     } catch (e) {
       console.log(
         `Failed to deposit. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`
+      )
+    }
+  })
+
+const ERC20At = (addr: string) => ERC20(web3, addr, account)
+vorpal
+  .command(
+    'depositERC20 <address> <amount>',
+    'Deposits an ERC20 coin to the Plasma Chain'
+  )
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    this.log(`Depositing ${args.coinId}`)
+    const token = ERC20At(args.address).instance
+    try {
+      // Approve
+      await token.approve([addressbook.plasmaAddress, args.amount])
+      // Transfer
+      await user.plasmaCashContract.depositERC20([args.amount])
+
+      // wait for the deposit event for receipt
+      const deposits = await user.deposits()
+      this.log('Coin deposited!')
+      console.log(deposits[deposits.length - 1])
+    } catch (e) {
+      console.log(`Failed to deposit. User owns only ${await token.balanceOf(addressbook.self)}`)
+    }
+  })
+  .hidden() // make command hidden until we enable plasma erc20 approve/transferFrom
+
+vorpal
+  .command('depositETH <amount>', 'Deposit ether to the Plasma Chain')
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    console.log('TBD')
+    try {
+      this.log(`Depositing ${args.amount} Ether`)
+      // wait for the deposit event for receipt
+      const deposits = await user.deposits()
+      this.log('Coin deposited!')
+      console.log(deposits[deposits.length - 1])
+    } catch (e) {
+      console.log(
+        `Failed to deposit. User owns only ${await web3.eth.getBalance(addressbook.self)}`
       )
     }
   })
@@ -118,7 +162,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Exiting ${args.coinId}!. Please wait for the exit period...`)
-    await user.exit(new BN(args.coinId, 16))
+    await user.exitAsync(new BN(args.coinId, 16))
     // Wait for the started exit event for receipt
   })
 
@@ -127,7 +171,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Transferring ${args.coinId} to ${args.newOwner}`)
-    await user.transfer(new BN(args.coinId, 16), args.newOwner)
+    await user.transferAsync(new BN(args.coinId, 16), args.newOwner)
     // Wait for the submit block and the data availability for receipt
   })
 
@@ -135,7 +179,7 @@ vorpal
   .command('finalize <coinId>', 'Finalize the exit of a coin and withdraw it')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    await user.finalizeExit(new BN(args.coinId, 16))
+    await user.finalizeExitAsync(new BN(args.coinId, 16))
     this.log(`Finalized the exit for ${args.coinId}`)
     // wait for the finalize exit for receipt
   })
@@ -153,8 +197,9 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Withdrawing ${args.coinId}`)
-    await user.withdraw(new BN(args.coinId, 16))
-    console.log(`Withdraw. Current owner of ${args.coinId} is ${await token.ownerOf(args.coinId)}`)
+    const coin = user.getPlasmaCoinAsync(new BN(args.coinId, 16))
+    await user.withdrawAsync(new BN(args.coinId, 16))
+    console.log(`Withdrew ${coin}`)
   })
 
 vorpal
