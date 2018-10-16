@@ -70,6 +70,15 @@ const user = PlasmaUser.createUser(
 )
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
+vorpal
+  .command('myCoins', 'Retrieves the user coins from the dappchain or from the state.')
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    const coins = await user.getUserCoinsAsync()
+    console.log(coins)
+  })
+
+// Next iteration make depositERC20/depositERC721/depositETH for each
 const ERC721At = (addr: string) => ERC721(web3, addr, account)
 vorpal
   .command('depositERC721 <address> <coinId>', 'Deposits an ERC721 coin to the Plasma Chain')
@@ -132,20 +141,7 @@ vorpal
       )
     }
   })
-
-vorpal
-  .command('debug submitDeposit i', 'Submit deposits to the dappchain in place of the oracle')
-  .types({ string: ['_'] })
-  .action(async function(this: CommandInstance, args: Args) {
-    await user.debug(args.i)
-  })
-
-vorpal
-  .command('debug submitBlock', 'Submits the pending dappchain block in place of the oracle')
-  .types({ string: ['_'] })
-  .action(async function(this: CommandInstance, args: Args) {
-    await user.submitPlasmaBlockAsync()
-  })
+  .hidden()
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
@@ -159,9 +155,13 @@ vorpal
   .command('exitCoin <coinId>', 'Start the exit of a coin from the Plasma Chain')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Exiting ${args.coinId}!. Please wait for the exit period...`)
-    await user.exitAsync(new BN(args.coinId, 16))
-    // Wait for the started exit event for receipt
+    this.log(`Exiting ${args.coinId}!`)
+    try {
+      await user.exitAsync(new BN(args.coinId, 16))
+      console.log("Exit initiated!")
+    } catch (e) {
+      console.log("Exit failed! Error: ", e.reason)
+    }
   })
 
 vorpal
@@ -177,6 +177,7 @@ vorpal
   .command('finalize <coinId>', 'Finalize the exit of a coin and withdraw it')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
+    // If time since exit not enough, return early
     await user.finalizeExitAsync(new BN(args.coinId, 16))
     this.log(`Finalized the exit for ${args.coinId}`)
     // wait for the finalize exit for receipt
@@ -195,7 +196,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Withdrawing ${args.coinId}`)
-    const coin = user.getPlasmaCoinAsync(new BN(args.coinId, 16))
+    const coin = await user.getPlasmaCoinAsync(new BN(args.coinId, 16))
     await user.withdrawAsync(new BN(args.coinId, 16))
     console.log(`Withdrew ${coin}`)
   })
