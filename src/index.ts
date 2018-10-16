@@ -31,12 +31,14 @@ args
   .option('-c --config [config-file]', 'Your config file')
   .parse(process.argv)
 
-let privateKey, plasmaAddress, erc721Address, startBlock
+let privateKey, plasmaAddress, erc721Address, erc20Address
+let startBlock: BN
 try {
   privateKey = require(path.resolve(args.keystore)).privateKey
   const config = require(path.resolve(args.config))
   plasmaAddress = config.plasma
   erc721Address = config.erc721
+  erc20Address = config.erc20
   startBlock = new BN(config.block)
 } catch (e) {
   if (!args.key || !args.address) {
@@ -70,10 +72,7 @@ const user = PlasmaUser.createUser(
 // Next iteration make depositERC20/depositERC721/depositETH for each
 const ERC721At = (addr: string) => ERC721(web3, addr, account)
 vorpal
-  .command(
-    'depositERC721 <address> <coinId>',
-    'Deposits an ERC721 coin to the Plasma Chain'
-  )
+  .command('depositERC721 <address> <coinId>', 'Deposits an ERC721 coin to the Plasma Chain')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
@@ -93,19 +92,19 @@ vorpal
 
 const ERC20At = (addr: string) => ERC20(web3, addr, account)
 vorpal
-  .command(
-    'depositERC20 <address> <amount>',
-    'Deposits an ERC20 coin to the Plasma Chain'
-  )
+  .command('depositERC20 <address> <amount>', 'Deposits an ERC20 coin to the Plasma Chain')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Depositing ${args.coinId}`)
+    this.log(`Depositing ${args.amount}`)
     const token = ERC20At(args.address).instance
     try {
       // Approve
+      console.log('Approving...')
       await token.approve([addressbook.plasmaAddress, args.amount])
+      console.log('Approved!')
+
       // Transfer
-      await user.plasmaCashContract.depositERC20([args.amount])
+      await user.plasmaCashContract.depositERC20([args.amount, args.address])
 
       // wait for the deposit event for receipt
       const deposits = await user.deposits()
@@ -115,7 +114,6 @@ vorpal
       console.log(`Failed to deposit. User owns only ${await token.balanceOf(addressbook.self)}`)
     }
   })
-  .hidden() // make command hidden until we enable plasma erc20 approve/transferFrom
 
 vorpal
   .command('depositETH <amount>', 'Deposit ether to the Plasma Chain')
@@ -209,6 +207,31 @@ vorpal
     await user.withdrawBondsAsync()
     this.log(`Bonds withdrawn:)`)
   })
+
+vorpal
+  .command('receive <coinId>', 'Check coin history and watch exits')
+  .types({ string: ['_'] })
+  .action(async function(this: CommandInstance, args: Args) {
+    const coinId = new BN(args.coinId, 16)
+    const valid = user.receiveCoinAsync(coinId)
+    if (valid) {
+    const events: any[] = await user.plasmaCashContract.getPastEvents('StartedExit', {
+      filter: { slot: coinId },
+      fromBlock: startBlock
+    })
+    if (events.length > 0) {
+      // Challenge the last exit of this coin if there were any exits at the time
+      const exit = events[events.length - 1]
+      await user.challengeExitAsync(coinId, exit.owner)
+    }
+    this.log(`Verified ${coinId} history, started watching.)`)
+    user.watchExit(coinId, new BN(await web3.eth.getBlockNumber()))
+  }
+  else {
+    user.database.removeCoin(coinId)
+    this.log(`Invalid ${coinId} history, rejecting...)`)
+  }
+})
 
 vorpal
   .command('coin <coinId>', 'Gets the details about a coin')
