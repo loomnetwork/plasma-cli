@@ -69,6 +69,28 @@ const user = PlasmaUser.createUser(
   startBlock
 )
 
+// On login: -- This requires exit/withdraw oracle to be working properly
+// Get all coins that have been validated
+// Check if any events happened since the latst observed block in the last session
+//  Start watching these coins
+// const lastCheckedBlock = user.database.getLastBlock()
+// const coins = user.database.getAllCoinSlots()
+// coins.forEach(async coinId => {
+//     const events: any[] = await user.plasmaCashContract.getPastEvents('StartedExit', {
+//       filter: { slot: coinId },
+//       fromBlock: lastCheckedBlock
+//     })
+//     if (events.length > 0) {
+//       // Challenge the last exit of this coin if there were any exits at the time
+//       const exit = events[events.length - 1]
+//       await user.challengeExitAsync(coinId, exit.owner)
+//     }
+//     console.log(`Verified ${coinId} history, started watching.)`)
+//     user.watchExit(coinId, new BN(await web3.eth.getBlockNumber()))
+//   })
+// // In addition, check for any new coins
+// user.refreshAsync()
+
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
   .command('myCoins', 'Retrieves the user coins from the dappchain or from the state.')
@@ -78,7 +100,6 @@ vorpal
     console.log(coins)
   })
 
-// Next iteration make depositERC20/depositERC721/depositETH for each
 const ERC721At = (addr: string) => ERC721(web3, addr, account)
 vorpal
   .command('depositERC721 <address> <coinId>', 'Deposits an ERC721 coin to the Plasma Chain')
@@ -108,17 +129,17 @@ vorpal
     const token = ERC20At(args.address).instance
     try {
       // Approve
-      console.log('Approving...')
+      this.log('Approving...')
       await token.approve([addressbook.plasmaAddress, args.amount])
-      console.log('Approved!')
+      this.log('Approved!')
 
       // Transfer
       await user.plasmaCashContract.depositERC20([args.amount, args.address])
+      this.log('Deposited!')
 
       // wait for the deposit event for receipt
       const deposits = await user.deposits()
-      this.log('Coin deposited!')
-      console.log(deposits[deposits.length - 1])
+      console.log('Coin info:', deposits[deposits.length - 1])
     } catch (e) {
       console.log(`Failed to deposit. User owns only ${await token.balanceOf(addressbook.self)}`)
     }
@@ -160,7 +181,7 @@ vorpal
       await user.exitAsync(new BN(args.coinId, 16))
       console.log("Exit initiated!")
     } catch (e) {
-      console.log("Exit failed! Error: ", e.reason)
+      console.log("Exit failed! Error: ", e)
     }
   })
 
@@ -246,3 +267,9 @@ vorpal
   .delimiter('✨ ')
   .use(repl)
   .show()
+
+process.on('SIGINT', async () => {
+  console.log("Caught interrupt signal");
+  user.database.saveLastBlock(new BN(await web3.eth.getBlockNumber()))
+  process.exit();
+})
