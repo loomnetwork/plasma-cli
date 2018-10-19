@@ -1,0 +1,22 @@
+# editor stuff
+/.vscode/
+
+# dev stuff
+.babelrc
+.editorconfig
+.env.test.example
+.env.test.jenkins
+.prettierignore
+.prettierrc
+tsconfig.json
+tslint.json
+webpack.e2e.test.config.js
+yarn-error.log
+yarn.lock
+
+# everything else
+/config/
+/db/
+/scripts/
+/src/
+/dist/
