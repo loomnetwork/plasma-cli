@@ -9,6 +9,7 @@ import path from 'path'
 import Vorpal = require('vorpal')
 import { Args, CommandInstance } from 'vorpal'
 import BN from 'bn.js'
+import Tx from 'ethereumjs-tx'
 
 const vorpal = new Vorpal()
 const vorpalLog = require('vorpal-log')
@@ -31,7 +32,10 @@ args
   .option('-c --config [config-file]', 'Your config file')
   .parse(process.argv)
 
-let privateKey, plasmaAddress, erc721Address, erc20Address
+let privateKey: string = ''
+let plasmaAddress: string = ''
+let erc721Address: string = ''
+let erc20Address: string = ''
 let startBlock: BN
 try {
   privateKey = require(path.resolve(args.keystore)).privateKey
@@ -91,7 +95,6 @@ const user = PlasmaUser.createUser(
 // // In addition, check for any new coins
 // user.refreshAsync()
 
-// Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
   .command('myCoins', 'Retrieves the user coins from the dappchain or from the state.')
   .types({ string: ['_'] })
@@ -153,6 +156,19 @@ vorpal
     try {
       this.log(`Depositing ${args.amount} Ether`)
       // wait for the deposit event for receipt
+
+      let tx = new Tx({
+        // @ts-ignore
+        to: plasmaAddress,
+        value: web3.utils.toHex(args.amount),
+        gas: web3.utils.toHex(400000),
+        gasPrice: '0x4a817c800',
+        nonce: await web3.eth.getTransactionCount(user.ethAddress)
+      })
+      // @ts-ignore
+      tx.sign(Buffer.from(privateKey.slice(2), 'hex'))
+      const serializedTx = tx.serialize()
+      await web3.eth.sendSignedTransaction(`0x${serializedTx.toString('hex')}`)
       const deposits = await user.deposits()
       this.log('Coin deposited!')
       console.log(deposits[deposits.length - 1])
@@ -179,9 +195,9 @@ vorpal
     this.log(`Exiting ${args.coinId}!`)
     try {
       await user.exitAsync(new BN(args.coinId, 16))
-      console.log("Exit initiated!")
+      console.log('Exit initiated!')
     } catch (e) {
-      console.log("Exit failed! Error: ", e)
+      console.log('Exit failed! Error: ', e)
     }
   })
 
@@ -190,7 +206,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Transferring ${args.coinId} to ${args.newOwner}`)
-    await user.transferAsync(new BN(args.coinId, 16), args.newOwner)
+    await user.transferAndVerifyAsync(new BN(args.coinId, 16), args.newOwner)
     // Wait for the submit block and the data availability for receipt
   })
 
@@ -235,25 +251,24 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     const coinId = new BN(args.coinId, 16)
-    const valid = user.receiveCoinAsync(coinId)
+    const valid = await user.receiveCoinAsync(coinId)
     if (valid) {
-    const events: any[] = await user.plasmaCashContract.getPastEvents('StartedExit', {
-      filter: { slot: coinId },
-      fromBlock: startBlock
-    })
-    if (events.length > 0) {
-      // Challenge the last exit of this coin if there were any exits at the time
-      const exit = events[events.length - 1]
-      await user.challengeExitAsync(coinId, exit.owner)
+      const events: any[] = await user.plasmaCashContract.getPastEvents('StartedExit', {
+        filter: { slot: coinId.toString() },
+        fromBlock: startBlock
+      })
+      if (events.length > 0) {
+        // Challenge the last exit of this coin if there were any exits at the time
+        const exit = events[events.length - 1]
+        await user.challengeExitAsync(coinId, exit.owner)
+      }
+      this.log(`Verified ${coinId} history, started watching.)`)
+      user.watchExit(coinId, new BN(await web3.eth.getBlockNumber()))
+    } else {
+      user.database.removeCoin(coinId)
+      this.log(`Invalid ${coinId} history, rejecting...)`)
     }
-    this.log(`Verified ${coinId} history, started watching.)`)
-    user.watchExit(coinId, new BN(await web3.eth.getBlockNumber()))
-  }
-  else {
-    user.database.removeCoin(coinId)
-    this.log(`Invalid ${coinId} history, rejecting...)`)
-  }
-})
+  })
 
 vorpal
   .command('coin <coinId>', 'Gets the details about a coin')
@@ -269,7 +284,7 @@ vorpal
   .show()
 
 process.on('SIGINT', async () => {
-  console.log("Caught interrupt signal");
+  console.log('Caught interrupt signal')
   user.database.saveLastBlock(new BN(await web3.eth.getBlockNumber()))
-  process.exit();
+  process.exit()
 })
