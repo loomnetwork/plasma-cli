@@ -154,17 +154,38 @@ Retrieving info for coin e901f51acd48b12f
 Bonds withdrawn:)
 ```
 
-## Deploy and test to Rinkeby
+## Deploy to Rinkeby
 
 ```
 yarn
+REPO_ROOT=`pwd`
 git clone https://github.com/loomnetwork/plasma-cash
-cd plasma-cash/server
+cd $REPO_ROOT/plasma-cash/server
 git checkout deploy
-mnemonic="your mnemonic here" npx truffle migrate -f2 --network rinkeby
+npm install
+mnemonic="your mnemonic here" .node_modules/bin/truffle migrate -f2 --network rinkeby
+PLASMA_ADDRESS=$(python -c "import json ; print(json.load(open('./build/contracts/RootChain.json'))['networks']['4']['address'])")
+ERC721_ADDRESS=$(python -c "import json ; print(json.load(open('./build/contracts/CryptoCards.json'))['networks']['4']['address'])")
+ERC20_ADDRESS=$(python -c "import json ; print(json.load(open('./build/contracts/.json'))['networks']['4']['address'])")
 ```
 
-Take the address from the deployed contract and put it in `loom.yml`
-`loom init -f && loom run`
+At this moment, the Plasma contract has been deployed (along with the Validator Manager contract, and 2 toy tokens for you to play with). We need to put the `PLASMA_ADDRESS` in the loom.yml.
+
+
+```
+cd $REPO_ROOT/dappchain
+curl https://raw.githubusercontent.com/loomnetwork/loom-sdk-documentation/master/scripts/get_loom.sh | sh
+chmod +x ./loom
+
+# Modify the Plasma contract's address
+sed -i -e "s/PlasmaHexAddress:.*/PlasmaHexAddress: \"$PLASMA_ADDRESS\"/"
+
+# Initialize loom params - also initialize the oracle address
+./loom init -f
+cp oracle.genesis.json genesis.json
+
+./loom run
+```
+
 Now you have a Loom DAppchain running that has Plasma Cash deployed and is hooked to Rinkeby.
 You can launch the CLI as described above and interact with it.

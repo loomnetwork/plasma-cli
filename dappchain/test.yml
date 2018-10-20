@@ -1,0 +1,17 @@
+PlasmaCash:
+  ContractEnabled: True
+  OracleEnabled: True
+  OracleConfig:
+    PlasmaBlockInterval: 1000
+    DAppChainCfg:
+      ContractName: "hostileoperator"
+      WriteURI: "http://localhost:46658/rpc"
+      ReadURI: "http://localhost:46658/query"
+      PrivateKeyPath: "./oracle.key"
+    EthClientCfg:
+      EthereumURI: "http://localhost:8545"
+      PlasmaHexAddress: "0x54eAd36A37312Eb9c265346a318e7289fBa895b3"
+      PrivateKeyPath: "./eth.key"
+      OverrideGas: false
+      TxPollInterval: 1
+      TxTimeout: 10
