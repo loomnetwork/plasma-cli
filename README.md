@@ -178,7 +178,7 @@ curl https://raw.githubusercontent.com/loomnetwork/loom-sdk-documentation/master
 chmod +x ./loom
 
 # Modify the Plasma contract's address
-sed -i -e "s/PlasmaHexAddress:.*/PlasmaHexAddress: \"$PLASMA_ADDRESS\"/"
+sed -i -e "s/PlasmaHexAddress:.*/PlasmaHexAddress: \"$PLASMA_ADDRESS\"/" loom.yml
 
 # Initialize loom params - also initialize the oracle address
 ./loom init -f
