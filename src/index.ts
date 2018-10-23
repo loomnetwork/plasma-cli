@@ -107,7 +107,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
-    user.depositERC721(new BN(args.coinId), args.address)
+    user.depositERC721Async(new BN(args.coinId), args.address)
     const deposits = await user.deposits()
     this.log('Coin deposited!')
     console.log(deposits[deposits.length - 1])
@@ -118,7 +118,7 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.amount}`)
-    user.depositERC20(new BN(args.amount), args.address)
+    user.depositERC20Async(new BN(args.amount), args.address)
     const deposits = await user.deposits()
     console.log('Coin info:', deposits[deposits.length - 1])
   })
@@ -130,7 +130,7 @@ vorpal
     console.log('TBD')
     try {
       this.log(`Depositing ${args.amount} Wei`)
-      await user.depositETH(new BN(args.amount))
+      await user.depositETHAsync(new BN(args.amount))
       const deposits = await user.deposits()
       this.log('Coin deposited!')
       console.log(deposits[deposits.length - 1])
