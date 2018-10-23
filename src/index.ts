@@ -107,10 +107,9 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.coinId}`)
-    user.depositERC721Async(new BN(args.coinId), args.address)
-    const deposits = await user.deposits()
-    this.log('Coin deposited!')
-    console.log(deposits[deposits.length - 1])
+    const coin = await user.depositERC721Async(new BN(args.coinId), args.address)
+    console.log('Deposited coin:')
+    console.log(coin)
   })
 
 vorpal
@@ -118,23 +117,22 @@ vorpal
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
     this.log(`Depositing ${args.amount}`)
-    user.depositERC20Async(new BN(args.amount), args.address)
-    const deposits = await user.deposits()
-    console.log('Coin info:', deposits[deposits.length - 1])
+    const coin = await user.depositERC20Async(new BN(args.amount), args.address)
+    console.log('Deposited coin:')
+    console.log(coin)
   })
 
 vorpal
   .command('depositETH <amount>', 'Deposit wei to the Plasma Chain')
   .types({ string: ['_'] })
   .action(async function(this: CommandInstance, args: Args) {
-    console.log('TBD')
     try {
       this.log(`Depositing ${args.amount} Wei`)
-      await user.depositETHAsync(new BN(args.amount))
-      const deposits = await user.deposits()
-      this.log('Coin deposited!')
-      console.log(deposits[deposits.length - 1])
+      const coin = await user.depositETHAsync(new BN(args.amount))
+      console.log('Deposited coin:')
+      console.log(coin)
     } catch (e) {
+      console.log(e)
       console.log(
         `Failed to deposit. User owns only ${await web3.eth.getBalance(addressbook.self)}`
       )
