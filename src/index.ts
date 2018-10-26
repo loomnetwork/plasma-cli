@@ -25,6 +25,7 @@ args
     'http://localhost:46658'
   )
   .option('-e, --ethereum [web3-endpoint]', 'The web3 Ethereum endpoint', 'http://localhost:8545')
+  .option('-b, --startblock [block number]', 'The block number in which the plasma contract was deployed. Used for event filtering')
   .option('-a, --address [plasma-address]', "The Plasma Contract's address")
   .option('--key [private-key]', 'Your private key')
   .option('--keystore [json-keystore]', 'Your private key in a file')
@@ -36,20 +37,21 @@ let plasmaAddress: string = ''
 let erc721Address: string = ''
 let erc20Address: string = ''
 let startBlock: BN
+privateKey = require(path.resolve(args.keystore)).privateKey
 try {
-  privateKey = require(path.resolve(args.keystore)).privateKey
   const config = require(path.resolve(args.config))
   plasmaAddress = config.plasma
   erc721Address = config.erc721
   erc20Address = config.erc20
   startBlock = new BN(config.block)
 } catch (e) {
-  if (!args.key || !args.address) {
+  if (!args.keystore || !args.address) {
     console.error('Options --key and --address are mandatory')
     process.exit(-1)
   }
-  privateKey = args.key
+  privateKey = require(path.resolve(args.keystore)).privateKey
   plasmaAddress = args.address
+  startBlock = new BN(args.startblock)
   startBlock = new BN(0)
 }
 
