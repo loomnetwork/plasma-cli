@@ -17,6 +17,5 @@ yarn.lock
 # everything else
 /config/
 /db/
-/scripts/
 /src/
 /dist/
