@@ -140,7 +140,6 @@ vorpal
       )
     }
   })
-  .hidden()
 
 // Next iteration make depositERC20/depositERC721/depositETH for each
 vorpal
