@@ -29,6 +29,7 @@ args
   .option('-a, --address [plasma-address]', "The Plasma Contract's address")
   .option('--key [private-key]', 'Your private key')
   .option('--keystore [json-keystore]', 'Your private key in a file')
+  .option('--chainId [chain-id]', 'The chain id')
   .option('-c --config [config-file]', 'Your config file')
   .parse(process.argv)
 
@@ -38,6 +39,7 @@ let erc721Address: string = ''
 let erc20Address: string = ''
 let startBlock: BN
 privateKey = require(path.resolve(args.keystore)).privateKey
+let chainId = args.chainId
 try {
   const config = require(path.resolve(args.config))
   plasmaAddress = config.plasma
@@ -71,7 +73,8 @@ const user = PlasmaUser.createUser(
   plasmaAddress,
   args.dappchain,
   privateKey,
-  startBlock
+  startBlock,
+  chainId
 )
 
 // On login: -- This requires exit/withdraw oracle to be working properly
@@ -179,12 +182,18 @@ vorpal
   })
 
 vorpal
-  .command('refresh', "Refreshes the user's state")
+  .command('watch', "Refreshes the user's state")
   .action(async function(this: CommandInstance, args: Args) {
-    this.log(`Refreshing state`)
-    await user.refreshAsync()
-    this.log(`Updated!`)
+    this.log(`Starting to watch blocks and auto refresh state`)
+    await user.watchBlocks()
   })
+vorpal
+  .command('stop-watching', "Refreshes the user's state")
+  .action(async function(this: CommandInstance, args: Args) {
+    this.log(`Stopped watching blocks`)
+    await user.stopWatchingBlocks()
+  })
+
 
 vorpal
   .command('withdraw <coinId>', 'Gets the details about a coin')
