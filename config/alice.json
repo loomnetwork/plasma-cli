@@ -1,4 +1,10 @@
 {
-    "privateKey": "0x062f16bee1871f3e3dbabfb800b19a3c03ad751e624d4d608a5879d7975868df",
-    "address": "0x3d5cf1f50c7124acbc6ea69b96a912fe890619d0"
+    "ethPrivateKey": "0x062f16bee1871f3e3dbabfb800b19a3c03ad751e624d4d608a5879d7975868df",
+    "dappchainPrivateKey": "iDAg84PiCWf4kAYzSnKtlu1rU///XpLqJUuimPEoV1Jp+GtLJa+yXdM/nZOZLcbm9CDAvnYMa/SKQeRNi/ciHA==",
+    "plasmaAddress" : "0x29cC25362304Fea1a8683372D4dADD2363db14bE",
+    "startBlock" : "3169621",
+    "ethUrl" : "https://rinkeby.infura.io",
+    "ethEventsUrl" : "ws://rinkeby.infura.io/ws",
+    "dappchainUrl" : "http://test-z-asia1.dappchains.com",
+    "dbPath": "/tmp/alice_db.json"
 }

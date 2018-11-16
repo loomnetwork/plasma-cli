@@ -1,80 +1,93 @@
 #!/usr/bin/env node
 
 import args from 'commander'
-import Web3 from 'web3'
-import { PlasmaUser } from 'loom-js'
 import path from 'path'
-
 import Vorpal = require('vorpal')
 import { Args, CommandInstance } from 'vorpal'
-import BN from 'bn.js'
-import Tx from 'ethereumjs-tx'
 
+import BN from 'bn.js'
+import { PlasmaUser } from 'loom-js'
+
+// Vorpal setup
 const vorpal = new Vorpal()
 const vorpalLog = require('vorpal-log')
-const repl = require('vorpal-repl')
 vorpal.use(vorpalLog)
 vorpal.history('plasma-cash.log')
 
 // CLI Parser
 args
   .version('0.1.0')
-  .option(
-    '-d, --dappchain [dappchain-address]',
-    "The DAppChain's endpoint",
-    'http://localhost:46658'
-  )
-  .option('-e, --ethereum [web3-endpoint]', 'The web3 Ethereum endpoint', 'http://localhost:8545')
-  .option('-b, --startblock [block number]', 'The block number in which the plasma contract was deployed. Used for event filtering')
-  .option('-a, --address [plasma-address]', "The Plasma Contract's address")
-  .option('--key [private-key]', 'Your private key')
-  .option('--keystore [json-keystore]', 'Your private key in a file')
-  .option('--chainId [chain-id]', 'The chain id')
-  .option('-c --config [config-file]', 'Your config file')
+  .option('--eth-key [private-key]', 'Your private key')
+  .option('--dappchain-key [dappchain-private-key]', 'Your dappchain private key')
+  .option('--plasma-address [plasma-address]', "The Plasma Contract's address")
+  .option('--startblock [block number]', 'The block number in which the plasma contract was deployed. Used for event filtering')
+  .option('--eth-url [ethereum-url]', 'The Ethereum url', 'http://localhost:8545')
+  .option('--eth-events-url [ethereum-event-url]', 'The Ethereum url for listening to events', 'http://localhost:8545')
+  .option('--dappchain-url [dappchain-url]', "The DAppChain's url", 'http://localhost:46658')
+  .option('--db-path [database path]', "The path to the database file")
+  .option('--config [config-file]', 'Your config file')
   .parse(process.argv)
 
-let privateKey: string = ''
-let plasmaAddress: string = ''
-let erc721Address: string = ''
-let erc20Address: string = ''
-let startBlock: BN
-privateKey = require(path.resolve(args.keystore)).privateKey
-let chainId = args.chainId
-try {
-  const config = require(path.resolve(args.config))
-  plasmaAddress = config.plasma
-  erc721Address = config.erc721
-  erc20Address = config.erc20
-  startBlock = new BN(config.block)
+let ethPrivateKey
+let dappchainPrivateKey
+let plasmaAddress
+let startBlock
+let ethUrl
+let ethEventsUrl
+let dappchainUrl
+let chainId //check how to regex grab chainId from the domain
+let dbPath
+
+let arg = false
+try { 
+  let config = require(path.resolve(args.config))
+  ethPrivateKey = config.ethPrivateKey
+  dappchainPrivateKey = config.dappchainPrivateKey
+  plasmaAddress = config.plasmaAddress
+  startBlock = new BN(config.startBlock)
+  ethUrl = config.ethUrl
+  ethEventsUrl = config.ethEventsUrl
+  dappchainUrl = config.dappchainUrl
+  dbPath = config.dbPath
+  chainId = config.dappchainUrl.split('.')[0].split('-')[2]
 } catch (e) {
-  if (!args.keystore || !args.address) {
-    console.error('Options --key and --address are mandatory')
-    process.exit(-1)
-  }
-  privateKey = require(path.resolve(args.keystore)).privateKey
-  plasmaAddress = args.address
-  startBlock = new BN(args.startblock)
-  startBlock = new BN(0)
+console.log(e)
+    arg = true
 }
 
-const provider = new Web3.providers.WebsocketProvider(args.ethereum)
-const web3 = new Web3(provider)
-const account = web3.eth.accounts.privateKeyToAccount(privateKey)
-const addressbook = {
-  plasmaAddress: plasmaAddress,
-  demoToken: erc721Address,
-  web3Endpoint: args.ethereum,
-  dappchainEndpoint: args.dappchain,
-  self: web3.eth.accounts.privateKeyToAccount(privateKey).address,
-  selfPrivate: privateKey
+// Otherwise we get the arguments from the commandline - CAREFUL WITH PASTING PRIVATEKEYS IN THE COMMAND LINE!
+if (arg) {
+  ethPrivateKey = args.ethPrivateKey
+  dappchainPrivateKey = args.dappchainPrivateKey
+  plasmaAddress = args.plasmaAddress
+  startBlock = new BN(args.startBlock)
+  ethUrl = args.ethUrl
+  ethEventsUrl = args.ethEventsUrl
+  dappchainUrl = args.dappchainUrl
+  dbPath = args.dbPath
+  chainId = args.dappchainUrl.split('.')[0].split('-')[2]
 }
-const user = PlasmaUser.createUser(
-  args.ethereum,
+
+(async () => {
+
+console.log(
+  ethPrivateKey,
+  dappchainPrivateKey,
+  ethUrl,
   plasmaAddress,
-  args.dappchain,
-  privateKey,
-  startBlock,
-  chainId
+  dappchainUrl,
+  ethEventsUrl,
+  dbPath
+  )
+
+const user = await PlasmaUser.createOfflineUser(
+  ethPrivateKey,
+  dappchainPrivateKey,
+  ethUrl,
+  plasmaAddress,
+  dappchainUrl,
+  ethEventsUrl,
+  dbPath
 )
 
 // On login: -- This requires exit/withdraw oracle to be working properly
@@ -138,9 +151,6 @@ vorpal
       console.log(coin)
     } catch (e) {
       console.log(e)
-      console.log(
-        `Failed to deposit. User owns only ${await web3.eth.getBalance(addressbook.self)}`
-      )
     }
   })
 
@@ -231,11 +241,11 @@ vorpal
 
 vorpal
   .delimiter('✨ ')
-  .use(repl)
   .show()
 
 process.on('SIGINT', async () => {
   console.log('Caught interrupt signal')
-  user.database.saveLastBlock(new BN(await web3.eth.getBlockNumber()))
   process.exit()
 })
+
+})()
