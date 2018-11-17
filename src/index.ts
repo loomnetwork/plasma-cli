@@ -120,6 +120,13 @@ if (arg) {
     })
 
   vorpal
+    .command('myAddress', 'Logs the user\'s address')
+    .types({ string: ['_'] })
+    .action(async function(this: CommandInstance, args: Args) {
+      console.log(user.ethAddress)
+    })
+
+  vorpal
     .command('depositERC721 <address> <coinId>', 'Deposits an ERC721 coin to the Plasma Chain')
     .types({ string: ['_'] })
     .action(async function(this: CommandInstance, args: Args) {
