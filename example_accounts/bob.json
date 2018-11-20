@@ -6,5 +6,6 @@
     "ethUrl" : "https://rinkeby.infura.io/5Ic91y0T9nLh6qUg33K0",
     "ethEventsUrl" : "wss://rinkeby.infura.io/ws",
     "dappchainUrl" : "http://test-z-asia1.dappchains.com",
+    "contractName" : "plasmacash",
     "dbPath": "/tmp/bob_db.json"
 }

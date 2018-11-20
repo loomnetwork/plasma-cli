@@ -33,6 +33,7 @@ args
   .option('--dappchain-url [dappchain-url]', "The DAppChain's url", 'http://localhost:46658')
   .option('--db-path [database path]', 'The path to the database file')
   .option('--config [config-file]', 'Your config file')
+  .option('--contract-name [contract-name]', "The plasma contract's name in the DAppchain", 'plasmacash')
   .parse(process.argv)
 
 let ethPrivateKey
@@ -42,6 +43,7 @@ let startBlock
 let ethUrl
 let ethEventsUrl
 let dappchainUrl
+let contractName
 let chainId //check how to regex grab chainId from the domain
 let dbPath
 
@@ -56,6 +58,7 @@ try {
   ethEventsUrl = config.ethEventsUrl
   dappchainUrl = config.dappchainUrl
   dbPath = config.dbPath
+  contractName = config.contractName
   chainId = config.dappchainUrl.split('.')[0].split('-')[2]
 } catch (e) {
   console.log(e)
@@ -72,11 +75,13 @@ if (arg) {
   ethEventsUrl = args.ethEventsUrl
   dappchainUrl = args.dappchainUrl
   dbPath = args.dbPath
+  contractName = args.contractName
   chainId = args.dappchainUrl.split('.')[0].split('-')[2]
 }
 
 ;(async () => {
 
+  PlasmaUser.contractName = contractName
   const user = await PlasmaUser.createOfflineUser(
     ethPrivateKey,
     dappchainPrivateKey,
