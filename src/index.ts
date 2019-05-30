@@ -28,7 +28,7 @@ args
   .option(
     '--eth-events-url [ethereum-event-url]',
     'The Ethereum url for listening to events',
-    'http://localhost:8545'
+    'ws://localhost:8546'
   )
   .option('--dappchain-url [dappchain-url]', "The DAppChain's url", 'http://localhost:46658')
   .option('--db-path [database path]', 'The path to the database file')
