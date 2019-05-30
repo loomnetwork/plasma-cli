@@ -13,14 +13,18 @@ Node JS All in one Plasma Cash client.
 Usage: plasma-cli [options]
 
 Options:
-  -V, --version                        output the version number
-  -d, --dappchain [dappchain-address]  The DAppChain's endpoint (default: "http://localhost:46658")
-  -e, --ethereum [web3-endpoint]       The web3 Ethereum endpoint (default: "http://localhost:8545")
-  -a, --address [plasma-address]       The Plasma Contract's address
-  --key [private-key]                  Your private key
-  --keystore [json-keystore]           Your private key in a file
-  -c --config [config-file]            Your config file
-  -h, --help                           output usage information
+  -V, --version                            output the version number
+  --eth-key [private-key]                  Your private key
+  --dappchain-key [dappchain-private-key]  Your dappchain private key
+  --plasma-address [plasma-address]        The Plasma Contract's address
+  --startblock [block number]              The block number in which the plasma contract was deployed. Used for event filtering
+  --eth-url [ethereum-url]                 The Ethereum url (default: "http://localhost:8545")
+  --eth-events-url [ethereum-event-url]    The Ethereum url for listening to events (default: "ws://localhost:8546")
+  --dappchain-url [dappchain-url]          The DAppChain's url (default: "http://localhost:46658")
+  --db-path [database path]                The path to the database file
+  --config [config-file]                   Your config file
+  --contract-name [contract-name]          The plasma contract's name in the DAppchain (default: "plasmacash")
+  -h, --help                               output usage information
 ```
 
 
@@ -28,33 +32,34 @@ Options:
 
 ### Config File
 
-`plasma-cli --keystore ./config/alice.json -c config/contracts.json -e wss://rinkeby.infura.io/ws`
+`plasma-cli --config example_accounts/alice.json`
 
-`alice.json` has your private key in hex form.
-`contract.json` has a `plasma` key which is the Plasma Contract's address, and a `block` parameter which should be the block at which the Plasma Contract was deployed. This is needed so that event filtering doesnt check from blocks before than the Plasma contract was deployed. 
+`alice.json` has a `plasmaAddress` key which is the Plasma Contract's address, and a `startBlock` parameter which should be the block at which the Plasma Contract was deployed. This is needed so that event filtering doesnt check from blocks before than the Plasma contract was deployed. 
 
 ### Command Line Arguments
 
-`plasma-cli --key <yourprivatekey> --address <plasmacontractaddress> --block <startblock> -e wss://rinkeby.infura.io/ws`
+`plasma-cli --eth-key <yourprivatekey> --plasma-address <plasmacontractaddress> --startblock <startblock> --eth-events-url wss://rinkeby.infura.io/ws`
 
 ## Usage inside the CLI
 
 ```
-> help
+✨ help
 
   Commands:
 
     help [command...]                 Provides help for a given command.
     exit                              Exits application.
     myCoins                           Retrieves the user coins from the dappchain or from the state.
+    myAddress                         Logs the user's address
     depositERC721 <address> <coinId>  Deposits an ERC721 coin to the Plasma Chain
     depositERC20 <address> <amount>   Deposits an ERC20 coin to the Plasma Chain
-    depositETH <amount>               Deposit ether to the Plasma Chain
+    depositETH <amount>               Deposit wei to the Plasma Chain
     deposits                          Gets all the deposits the user has made
     exitCoin <coinId>                 Start the exit of a coin from the Plasma Chain
     transfer <coinId> <newOwner>      Send a coin to a new user
     finalize <coinId>                 Finalize the exit of a coin and withdraw it
-    refresh                           Refreshes the user's state
+    watch                             Refreshes the user's state
+    stop-watching                     Refreshes the user's state
     withdraw <coinId>                 Gets the details about a coin
     withdrawBonds                     Withdraws the user's bonds
     receive <coinId>                  Check coin history and watch exits
@@ -73,7 +78,7 @@ First, you need to deposit some funds to the Plasma Contract. You do this with o
 After the coin has been deposited, the CLI will return the data for that coin.
 
 ```
-> depositETH 100000
+✨ depositETH 100000
 Depositing 100000 Wei
 Coin deposited!
 { slot: <BN: e901f51acd48b12f>,
@@ -90,7 +95,7 @@ The user can then inspect the above information with the `coin` command: `coin e
 In order to transact then you can use the command `transfer`. This command will send the transaction, and also send a confirmation receipt of the txs inclusion, if the transaction is included within a set number of blocks (default 6). If not, the user can assume they are being censored and should exit. If successfuly included, it will also stop any watchers for the coin's exits.
 
 ```
-> transfer e901f51acd48b12f 0x82472162c3e7927557e7bcf5cca7261e188747d3
+✨ transfer e901f51acd48b12f 0x82472162c3e7927557e7bcf5cca7261e188747d3
 Transferring e901f51acd48b12f to 0x82472162c3e7927557e7bcf5cca7261e188747d3
 Tx(e901f51acd48b12f, 0x82472162c3e7927557e7bcf5cca7261e188747d3) included & verified in block 3000
 ```
@@ -102,11 +107,11 @@ The receiver at this point shoudl call `receive`
 This is as simple as calling `exitCoin`. The client will initiate an exit (and deposit the required security bond). It will also automatically trigger a watcher for challenges on that exit. 
 
 ```
-> exitCoin e901f51acd48b12f
+✨ exitCoin e901f51acd48b12f
 Exiting e901f51acd48b12f!
 Exit initiated!
 
-> coin e901f51acd48b12f
+✨ coin e901f51acd48b12f
 Retrieving info for coin e901f51acd48b12f
 { slot: <BN: e901f51acd48b12f>,
   uid: <BN: 0>,
@@ -121,10 +126,10 @@ Retrieving info for coin e901f51acd48b12f
 After the dispute period has passed, they can finalize the exit, and withdraw the coin with their bonds. This will stop all watchers
 
 ```
-> finalize e901f51acd48b12f
+✨ finalize e901f51acd48b12f
 Finalized the exit for e901f51acd48b12f
 
-> coin e901f51acd48b12f
+✨ coin e901f51acd48b12f
 Retrieving info for coin e901f51acd48b12f
 { slot: <BN: e901f51acd48b12f>,
   uid: <BN: 0>,
@@ -135,11 +140,11 @@ Retrieving info for coin e901f51acd48b12f
   mode: 0,
   contractAddress: '0x3D5Cf1f50C7124ACbC6ea69b96a912fE890619D0' }
 
-> withdraw e901f51acd48b12f
+✨ withdraw e901f51acd48b12f
 Withdrawing e901f51acd48b12f
 Withdrew e901f51acd48b12f
 
-> coin e901f51acd48b12f
+✨ coin e901f51acd48b12f
 Retrieving info for coin e901f51acd48b12f
 { slot: <BN: e901f51acd48b12f>,
   uid: <BN: 0>,
